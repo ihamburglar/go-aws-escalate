@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
@@ -34,7 +37,7 @@ func GetUsers(iamclient *iam.Client, stsclient *sts.Client, ctx context.Context,
 
 	//TODO, this is not desirable
 	input := &iam.ListUsersInput{
-		MaxItems: aws.Int32(int32((10000))),
+		MaxItems: aws.Int32(int32((1000))),
 	}
 
 	var users []string
@@ -47,7 +50,7 @@ func GetUsers(iamclient *iam.Client, stsclient *sts.Client, ctx context.Context,
 			panic(err)
 		}
 		for _, i := range result.Users {
-			users = append(users, *i.UserId)
+			users = append(users, *i.Arn)
 		}
 	} else {
 		// else single user
@@ -56,8 +59,32 @@ func GetUsers(iamclient *iam.Client, stsclient *sts.Client, ctx context.Context,
 			fmt.Println("Got an error retrieving users:")
 			panic(err)
 		}
-		users = append(users, *result.UserId)
+		users = append(users, *result.Arn)
 	}
 
+	fmt.Printf("%v", users)
 	return users
+}
+
+func listGroups(ctx context.Context, iamclient *iam.Client, a string) []types.Group {
+	iarn, err := arn.Parse(a)
+	if err != nil {
+		fmt.Println("Got an error retrieving groups:")
+		panic(err)
+	}
+	resource := iarn.Resource
+
+	u := strings.Split(resource, "/")
+
+	group, err := iamclient.ListGroupsForUser(ctx, &iam.ListGroupsForUserInput{
+		UserName: aws.String(u[1]),
+	})
+	if err != nil {
+		fmt.Println("Got an error retrieving groups:")
+		panic(err)
+	}
+
+	//	fmt.Printf("%v", *i.GroupName)
+	return group.Groups
+
 }
