@@ -18,13 +18,18 @@ func main() {
 	//c := config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(access_key_id, secret_acces_key, session_token))
 
 	iamc, stsc, ctx := authClients(all_users)
-	users := GetUsers(iamc, stsc, ctx, all_users)
-	for _, user := range users {
-		groups := listGroups(ctx, iamc, user)
-		fmt.Println("=== The user: " + user + " has the following groups:")
+	var users AllUsers
+	users = GetUsers(users, iamc, stsc, ctx, all_users)
+	// TODO put users into group
+	for _, user := range users.UserMetaData {
+		groups := listGroups(ctx, iamc, *user.User.UserId)
+		// TODO move iarns into GetUsers
+		fmt.Println("=== The user: " + *user.User.UserId + " has the following groups:")
 		for _, group := range groups {
 			fmt.Println(*group.GroupName)
+
 		}
 
 	}
+
 }

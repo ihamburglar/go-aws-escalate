@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -33,14 +34,13 @@ func ListUsers(c context.Context, api IAMListUsersAPI, input *iam.ListUsersInput
 }
 
 // GetUsers retrieves either all users or just the current user and returns a slice of strings of users.
-func GetUsers(iamclient *iam.Client, stsclient *sts.Client, ctx context.Context, aUsers bool) []string {
+func GetUsers(users AllUsers, iamclient *iam.Client, stsclient *sts.Client, ctx context.Context, aUsers bool) AllUsers {
 
 	//TODO, this is not desirable
 	input := &iam.ListUsersInput{
 		MaxItems: aws.Int32(int32((1000))),
 	}
 
-	var users []string
 	if aUsers {
 		// If All Users
 		//TODO, have not tested with large environments.  May need to paginate.
@@ -49,8 +49,11 @@ func GetUsers(iamclient *iam.Client, stsclient *sts.Client, ctx context.Context,
 			fmt.Println("Got an error retrieving users:")
 			panic(err)
 		}
-		for _, i := range result.Users {
-			users = append(users, *i.Arn)
+		for _, a := range result.Users {
+			u := UserMetaData{
+				User: a,
+			}
+			users.UserMetaData = append(users.UserMetaData, u)
 		}
 	} else {
 		// else single user
@@ -59,7 +62,26 @@ func GetUsers(iamclient *iam.Client, stsclient *sts.Client, ctx context.Context,
 			fmt.Println("Got an error retrieving users:")
 			panic(err)
 		}
-		users = append(users, *result.Arn)
+		// Sometimes you don't have perms to list users.
+		// This is a best effort for single user creation from STS
+		faketime := time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
+		a := types.User{
+			Arn: result.Arn,
+			// TODO pull from somewhere else if at all
+			CreateDate: &faketime,
+			Path:       result.Arn,
+			UserId:     result.UserId,
+			UserName:   result.Arn,
+			// TODO pull from somewhere else if at all
+			// PasswordLastUsed: (*time.Time)(time.Now().UTC().Location()),
+			// PermissionsBoundary: ,
+			// Tags: ,
+			// noSmithyCocumentSerde
+		}
+		u := UserMetaData{
+			User: a,
+		}
+		users.UserMetaData = append(users.UserMetaData, u)
 	}
 
 	fmt.Printf("%v", users)
