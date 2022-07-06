@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 func main() {
@@ -22,10 +23,13 @@ func main() {
 	users = GetUsers(users, iamc, stsc, ctx, all_users)
 	// TODO put users into group
 	for _, user := range users.UserMetaData {
-		groups := listGroups(ctx, iamc, *user.User.UserId)
+		g := listGroups(ctx, iamc, *user.User.Arn)
+		users.UserMetaData = append(users.UserMetaData, UserMetaData{
+			User:   user.User,
+			Groups: g})
 		// TODO move iarns into GetUsers
-		fmt.Println("=== The user: " + *user.User.UserId + " has the following groups:")
-		for _, group := range groups {
+		fmt.Println("=== The user: " + strings.TrimPrefix(*user.User.Arn, "arn:aws:iam::") + " has the following groups:")
+		for _, group := range g {
 			fmt.Println(*group.GroupName)
 
 		}
