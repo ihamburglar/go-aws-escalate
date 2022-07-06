@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.15.12
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.8
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.8
+	github.com/n4ch04/aws-policy v1.0.1
 )
 
 require (
@@ -18,4 +19,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.10 // indirect
 	github.com/aws/smithy-go v1.12.0 // indirect
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/rs/zerolog v1.21.0 // indirect
 )
