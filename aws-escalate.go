@@ -24,27 +24,24 @@ func main() {
 
 	for _, user := range users.UserMetaData {
 		groups := GetGroups(ctx, iamc, *user.User.Arn)
-		inlinePolicies := GetGroupPolicies(ctx, iamc, groups)
-		// May need to get policy documents
-		attachedPolicies := GetAttachedGroupPolicies(ctx, iamc, groups)
+		groupInlinePolicies := GetGroupPolicies(ctx, iamc, groups)
+		groupInlinePolicyDocuments := GetGroupPolicyDocument(ctx, iamc, groups, groupInlinePolicies)
+		groupAttachedPolicies := GetAttachedGroupPolicies(ctx, iamc, groups)
 		userInlinePolicies := GetUserPolicies(ctx, iamc, user.User)
 		userAttachedPolicies := GetAttachedUserPolicies(ctx, iamc, user.User)
-		userInlinePolicyDocument := GetUserPolicyDocument(ctx, iamc, user.User, userAttachedPolicies)
+		userInlinePolicyDocument := GetUserPolicyDocument(ctx, iamc, user.User, userInlinePolicies)
 
 		users.UserMetaData = append(users.UserMetaData, UserMetaData{
-			User:                     user.User,
-			Groups:                   groups,
-			InlinePolicies:           inlinePolicies,
-			AttachedPolicies:         attachedPolicies,
-			UserInlinePolicies:       userInlinePolicies,
-			userInlinePolicyDocument: userInlinePolicyDocument,
+			User:                       user.User,
+			Groups:                     groups,
+			GroupInlinePolicies:        groupInlinePolicies,
+			GroupAttachedPolicies:      groupAttachedPolicies,
+			GroupInlinePolicyDocuments: groupInlinePolicyDocuments,
+			UserInlinePolicies:         userInlinePolicies,
+			UserAttachedPolicies:       userAttachedPolicies,
+			UserInlinePolicyDocument:   userInlinePolicyDocument,
 		})
-		// TODO move iarns into GetUsers
-		for _, p := range inlinePolicies {
-			for _, pol := range p {
-				fmt.Printf("%v\n", pol)
-			}
-		}
+
 		fmt.Println("=== The user: " + strings.TrimPrefix(*user.User.Arn, "arn:aws:iam::") + " has the following groups:")
 		for _, group := range groups {
 			fmt.Println(*group.GroupName)

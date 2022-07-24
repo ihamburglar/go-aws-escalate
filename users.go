@@ -6,14 +6,21 @@ import (
 )
 
 type UserMetaData struct {
-	User                     types.User
-	Groups                   []types.Group
-	InlinePolicies           [][]string
-	AttachedPolicies         [][]types.AttachedPolicy
-	UserInlinePolicies       []string
-	userInlinePolicyDocument []awspolicy.Policy
+	User                       types.User
+	Groups                     []types.Group
+	GroupInlinePolicies        []GroupPolicies
+	GroupAttachedPolicies      [][]types.AttachedPolicy
+	GroupInlinePolicyDocuments []awspolicy.Policy
+	UserInlinePolicies         []string
+	UserAttachedPolicies       [][]types.AttachedPolicy
+	UserInlinePolicyDocument   []awspolicy.Policy
 }
 
 type AllUsers struct {
 	UserMetaData []UserMetaData
+}
+
+type GroupPolicies struct {
+	Group    types.Group
+	Policies []string
 }

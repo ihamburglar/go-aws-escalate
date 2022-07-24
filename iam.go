@@ -116,10 +116,10 @@ func GetGroups(ctx context.Context, iamclient *iam.Client, a string) []types.Gro
 }
 
 // GetGroupPolicies runs ListGroupPolicies and returns the groups associated inline policies
-func GetGroupPolicies(ctx context.Context, iamclient *iam.Client, groups []types.Group) [][]string {
+func GetGroupPolicies(ctx context.Context, iamclient *iam.Client, groups []types.Group) []GroupPolicies {
 
 	// var for policy slice
-	var policies [][]string
+	var gpolicies []GroupPolicies
 	for _, group := range groups {
 		input := &iam.ListGroupPoliciesInput{GroupName: group.GroupName}
 		policiespergroup, err := iamclient.ListGroupPolicies(ctx, input)
@@ -128,9 +128,13 @@ func GetGroupPolicies(ctx context.Context, iamclient *iam.Client, groups []types
 			panic(err)
 		}
 		fmt.Printf("*** group policy names :%v\n", policiespergroup.PolicyNames)
-		policies = append(policies, policiespergroup.PolicyNames)
+		gp := GroupPolicies{
+			Group:    group,
+			Policies: policiespergroup.PolicyNames,
+		}
+		gpolicies = append(gpolicies, gp)
 	}
-	return policies
+	return gpolicies
 }
 
 // GetAttachedGroupPolicies runs ListAttachedPolicies and returns the attached policies
@@ -183,26 +187,60 @@ func GetAttachedUserPolicies(ctx context.Context, iamclient *iam.Client, user ty
 }
 
 // GetUserPolicyDocument runs GetUserPolicy and returns the associated inline user policy document
-func GetUserPolicyDocument(ctx context.Context, iamclient *iam.Client, user types.User, policies [][]types.AttachedPolicy) []awspolicy.Policy {
+func GetUserPolicyDocument(ctx context.Context, iamclient *iam.Client, user types.User, policies []string) []awspolicy.Policy {
 	var outPolicies []awspolicy.Policy
+	fmt.Println("fetching policies")
 	for _, policy := range policies {
-		for _, p := range policy {
-			input := &iam.GetUserPolicyInput{
-				PolicyName: p.PolicyName,
-				UserName:   user.UserName}
-			rawPolicyDocument, err := iamclient.GetUserPolicy(ctx, input)
-			if err != nil {
-				fmt.Println("Got an error retrieving user inline policy documents:")
-				panic(err)
+		fmt.Println("fetching policy: " + policy)
+		input := &iam.GetUserPolicyInput{
+			PolicyName: &policy,
+			UserName:   user.UserName}
+		rawPolicyDocument, err := iamclient.GetUserPolicy(ctx, input)
+		if err != nil {
+			fmt.Println("Got an error retrieving user inline policy documents:")
+			panic(err)
+		}
+		fmt.Printf("*** policy : %v\n", &rawPolicyDocument.PolicyDocument)
+		p := awspolicy.Policy{
+			//[]byte(rawPolicyDocument.PolicyDocument)
+			//rawPolicyDocument.PolicyDocument.Sta
+		}
+		outPolicies = append(outPolicies, p)
+		//outPolicies := outPolicies.UnmarshalJSON()
+		//outPolicies = append(outPolicies, *outPolicy.PolicyDocument)
+
+	}
+	fmt.Printf("fdsa :%v\n", policies)
+
+	return outPolicies
+}
+
+// GetUserPolicyDocument runs GetUserPolicy and returns the associated inline user policy document
+func GetGroupPolicyDocument(ctx context.Context, iamclient *iam.Client, groups []types.Group, policies []GroupPolicies) []awspolicy.Policy {
+	var outPolicies []awspolicy.Policy
+	fmt.Println("fetching policies")
+	for _, group := range groups {
+		for _, groupPolicies := range policies {
+			for _, groupPolicy := range groupPolicies.Policies {
+				fmt.Println("fetching policy: " + groupPolicy)
+				input := &iam.GetGroupPolicyInput{
+					PolicyName: &groupPolicy,
+					GroupName:  group.GroupName}
+				rawPolicyDocument, err := iamclient.GetGroupPolicy(ctx, input)
+				if err != nil {
+					fmt.Println("Got an error retrieving user inline policy documents:")
+					panic(err)
+				}
+				fmt.Printf("*** policy : %v\n", &rawPolicyDocument.PolicyDocument)
+				p := awspolicy.Policy{
+					//[]byte(rawPolicyDocument.PolicyDocument)
+					//rawPolicyDocument.PolicyDocument.Sta
+				}
+				outPolicies = append(outPolicies, p)
+				//outPolicies := outPolicies.UnmarshalJSON()
+				//outPolicies = append(outPolicies, *outPolicy.PolicyDocument)
+
 			}
-			fmt.Printf("*** policy : %v\n", *rawPolicyDocument.PolicyDocument)
-			p := awspolicy.Policy{
-				//[]byte(rawPolicyDocument.PolicyDocument)
-				//rawPolicyDocument.PolicyDocument.Sta
-			}
-			outPolicies = append(outPolicies, p)
-			//outPolicies := outPolicies.UnmarshalJSON()
-			//outPolicies = append(outPolicies, *outPolicy.PolicyDocument)
 		}
 	}
 	fmt.Printf("fdsa :%v\n", policies)
