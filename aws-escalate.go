@@ -25,9 +25,9 @@ func main() {
 	for _, user := range users.UserMetaData {
 		groups := GetGroups(ctx, iamc, *user.User.Arn)
 		groupInlinePolicies := GetGroupPolicies(ctx, iamc, groups)
-		groupInlinePolicyDocuments := GetGroupPolicyDocument(ctx, iamc, groups, groupInlinePolicies)
+		groupInlinePolicyDocuments := GetGroupPolicyDocument(ctx, iamc, groupInlinePolicies)
 		groupAttachedPolicies := GetAttachedGroupPolicies(ctx, iamc, groups)
-		userInlinePolicies := GetUserPolicies(ctx, iamc, user.User)
+		userInlinePolicies := GetUserInlinePolicies(ctx, iamc, user.User)
 		userAttachedPolicies := GetAttachedUserPolicies(ctx, iamc, user.User)
 		userInlinePolicyDocument := GetUserPolicyDocument(ctx, iamc, user.User, userInlinePolicies)
 
@@ -42,9 +42,9 @@ func main() {
 			UserInlinePolicyDocument:   userInlinePolicyDocument,
 		})
 
-		fmt.Println("=== The user: " + strings.TrimPrefix(*user.User.Arn, "arn:aws:iam::") + " has the following groups:")
+		fmt.Println("=== The user: " + strings.TrimPrefix(*user.User.Arn, "arn:aws:iam::") + " has the following groups: \n")
 		for _, group := range groups {
-			fmt.Println(*group.GroupName)
+			fmt.Println("* Found group name :" + *group.GroupName)
 
 		}
 
