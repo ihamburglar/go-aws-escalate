@@ -226,13 +226,18 @@ func GetUserPolicyDocument(ctx context.Context, iamclient *iam.Client, user type
 			panic(err)
 		}
 		fmt.Printf("*** From GetUserPolicyDocument() policy : %v\n", &rawPolicyDocument.PolicyDocument)
-		p := awspolicy.Policy{
-			//[]byte(rawPolicyDocument.PolicyDocument)
-			//rawPolicyDocument.PolicyDocument.Sta
+
+		pd, err := url.QueryUnescape(*rawPolicyDocument.PolicyDocument)
+		if err != nil {
+			fmt.Println("Got an error decoding url encoded string	")
+			panic(err)
 		}
+		fmt.Printf("*** From GetGroupPolicyDocument() policy : %v\n", pd)
+		var p awspolicy.Policy
+		p.UnmarshalJSON([]byte(pd))
+		fmt.Println(p.Version)
+
 		outPolicies = append(outPolicies, p)
-		//outPolicies := outPolicies.UnmarshalJSON()
-		//outPolicies = append(outPolicies, *outPolicy.PolicyDocument)
 
 	}
 	return outPolicies
@@ -241,7 +246,6 @@ func GetUserPolicyDocument(ctx context.Context, iamclient *iam.Client, user type
 // GetGroupPolicyDocument runs GetUserPolicy and returns the associated inline user policy document
 func GetGroupPolicyDocument(ctx context.Context, iamclient *iam.Client, policies []GroupPolicies) []awspolicy.Policy {
 	var outPolicies []awspolicy.Policy
-	//for _, group := range groups {
 	for _, groupPolicies := range policies {
 		fmt.Printf("Group policies: %v\n", groupPolicies.Policies)
 		for _, groupPolicy := range groupPolicies.Policies {
@@ -262,16 +266,12 @@ func GetGroupPolicyDocument(ctx context.Context, iamclient *iam.Client, policies
 				panic(err)
 			}
 			fmt.Printf("*** From GetGroupPolicyDocument() policy : %v\n", pd)
-			p := awspolicy.Policy{
-				//[]byte(rawPolicyDocument.PolicyDocument)
-				//rawPolicyDocument.PolicyDocument.Sta
-			}
-			outPolicies = append(outPolicies, p)
-			//outPolicies := outPolicies.UnmarshalJSON()
-			//outPolicies = append(outPolicies, *outPolicy.PolicyDocument)
+			var p awspolicy.Policy
+			p.UnmarshalJSON([]byte(pd))
+			fmt.Println(p.Version)
 
+			outPolicies = append(outPolicies, p)
 		}
 	}
-	//}
 	return outPolicies
 }
