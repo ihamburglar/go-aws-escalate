@@ -24,3 +24,8 @@ type GroupPolicies struct {
 	Group    types.Group
 	Policies []string
 }
+
+type Method struct {
+	MethodName string
+	PolicyType []bool
+}
