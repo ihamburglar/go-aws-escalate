@@ -16,16 +16,23 @@ type UserMetaData struct {
 	UserInlinePolicyDocument   []awspolicy.Policy
 }
 
+// TODO change to lower?
 type AllUsers struct {
 	UserMetaData []UserMetaData
 }
 
+//TODO change to lower?
 type GroupPolicies struct {
 	Group    types.Group
 	Policies []string
 }
 
-type Method struct {
+type method struct {
 	MethodName string
-	PolicyType []bool
+	PolicySets []policySet
+}
+
+type policySet struct {
+	PolicyName string
+	PolicyBool bool
 }
